@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+envs_dir="${ENTER_ENVS_DIR:-$HOME/envs}"
+
+bare=false
+rebuild=false
+
+usage() {
+    echo "usage: enter [--bare] [--rebuild] ENV [EMACSCLIENT-ARGS...]" >&2
+    exit 2
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --bare)
+            bare=true
+            shift
+            ;;
+        --rebuild)
+            rebuild=true
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            usage
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+[[ $# -ge 1 ]] || usage
+
+name="$1"
+shift
+
+if [[ ! "$name" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
+    echo "enter: invalid environment name: $name" >&2
+    exit 2
+fi
+
+dir="$envs_dir/$name"
+containerfile="$dir/Containerfile"
+image="localhost/enter-$name"
+container="enter-$name"
+
+if [[ ! -f "$containerfile" ]]; then
+    echo "enter: no environment '$name' in $envs_dir" >&2
+    exit 1
+fi
+
+run_args=(
+    --hostname "$name"
+    --userns=keep-id
+)
+
+if [[ -f "$dir/run" ]]; then
+    # shellcheck source=/dev/null
+    source "$dir/run"
+fi
+
+build() {
+    podman build \
+        --build-arg "UID=$(id -u)" \
+        --build-arg "GID=$(id -g)" \
+        --tag "$image" \
+        "$dir"
+}
+
+#
+# Bare mode
+#
+if "$bare"; then
+    # A bare invocation must work even before the environment has
+    # ever been created. Rebuilding explicitly also lands here.
+    if "$rebuild" || ! podman image exists "$image"; then
+        build
+    fi
+
+    exec podman run \
+        --rm \
+        --interactive \
+        --tty \
+        "${run_args[@]}" \
+        "$image" \
+        /bin/bash -l
+fi
+
+#
+# Rebuild mode
+#
+if "$rebuild"; then
+    if podman container exists "$container"; then
+        podman rm --force "$container" >/dev/null
+    fi
+
+    build
+fi
+
+#
+# Create persistent Emacs container if necessary.
+#
+if ! podman container exists "$container"; then
+    if ! podman image exists "$image"; then
+        build
+    fi
+
+    podman create \
+        --name "$container" \
+        "${run_args[@]}" \
+        "$image" \
+        emacs --fg-daemon \
+        >/dev/null
+fi
+
+#
+# Start the container if necessary.
+#
+if [[ "$(podman inspect --format '{{.State.Running}}' "$container")" != true ]]; then
+    podman start "$container" >/dev/null
+fi
+
+#
+# Wait for the Emacs server.
+#
+while ! podman exec "$container" \
+    emacsclient --eval t >/dev/null 2>&1
+do
+    if [[ "$(podman inspect --format '{{.State.Running}}' "$container")" != true ]]; then
+        echo "enter: Emacs failed to start in '$name'" >&2
+        echo >&2
+        podman logs "$container" >&2 || true
+        echo >&2
+        echo "Use 'enter --bare $name' to troubleshoot." >&2
+        exit 1
+    fi
+
+    sleep 0.1
+done
+
+#
+# Attach terminal Emacs client.
+#
+exec podman exec \
+    --interactive \
+    --tty \
+    --env TERM \
+    --env COLORTERM \
+    "$container" \
+    emacsclient --tty "$@"

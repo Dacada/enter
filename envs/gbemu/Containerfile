@@ -1,0 +1,24 @@
+FROM archlinux:base
+
+ARG UID=1000
+ARG GID=1000
+
+RUN pacman -Syu --noconfirm \
+        emacs-nox git openssh the_silver_searcher \
+        zig zls \
+    && pacman -Scc --noconfirm
+
+RUN groupadd --gid "$GID" dev \
+    && useradd \
+        --uid "$UID" \
+        --gid "$GID" \
+        --create-home \
+        --shell /bin/bash \
+        dev
+
+RUN printf '\nPS1="[$(< /run/container-icon)] \\w \\\$ "\n' >> /home/dev/.bashrc
+
+ENV HOME=/home/dev
+
+USER dev
+WORKDIR /home/dev
