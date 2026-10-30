@@ -1,0 +1,8 @@
+run_args+=(
+    --volume "$dir/emacs.d:/home/dev/.emacs.d"
+    --volume "$HOME/git/Phylactery:$HOME/git/Phylactery:ro"
+    --volume "$HOME/.ssh:/home/dev/.ssh"
+    --volume "$dir/icon:/run/container-icon:ro"
+    --volume "$HOME/python_scraps:/home/dev/python_scraps"
+    --workdir /home/dev/python_scraps
+)
