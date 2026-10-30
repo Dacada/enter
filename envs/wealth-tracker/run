@@ -1,0 +1,12 @@
+run_args+=(
+    --volume "$HOME/git/wealth-tracker:/home/dev/wealth-tracker"
+    --volume "$dir/emacs.d:/home/dev/.emacs.d"
+    --volume "$HOME/git/Phylactery:$HOME/git/Phylactery:ro"
+    --volume "$HOME/.ssh:/home/dev/.ssh"
+    --volume "$dir/icon:/run/container-icon:ro"
+    --volume "$dir/bundle:/home/dev/.bundle"
+    --volume "$dir/gem:/home/dev/.local/share/gem"
+    --volume "$dir/codex:/home/dev/.codex"
+    --publish 127.0.0.1:3000:3000
+    --workdir /home/dev/wealth-tracker
+)

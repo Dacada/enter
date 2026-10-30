@@ -1,0 +1,12 @@
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
+cli_auth_credentials_store = "file"
+
+[tui]
+screen_reader_detection_done = true
+
+[tui.model_availability_nux]
+"gpt-6.1-sol" = 1
+
+[projects."/home/dev/wealth-tracker"]
+trust_level = "trusted"
