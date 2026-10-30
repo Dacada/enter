@@ -60,15 +60,22 @@ run_args=(
 )
 
 if [[ -f "$dir/run" ]]; then
-    # shellcheck source=/dev/null
     source "$dir/run"
+fi
+
+build_args=(
+    --build-arg "UID=$(id -u)"
+    --build-arg "GID=$(id -g)"
+    --tag "$image"
+)
+
+if [[ -f "$dir/build" ]]; then
+    source "$dir/build"
 fi
 
 build() {
     podman build \
-        --build-arg "UID=$(id -u)" \
-        --build-arg "GID=$(id -g)" \
-        --tag "$image" \
+        "${build_args[@]}" \
         "$dir"
 }
 
