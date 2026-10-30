@@ -4,6 +4,7 @@ run_args+=(
     --volume "$HOME/git/Phylactery:$HOME/git/Phylactery:ro"
     --volume "$HOME/.ssh:/home/dev/.ssh"
     --volume "$dir/icon:/run/container-icon:ro"
+    --volume "$HOME/.gitconfig:/home/dev/.gitconfig"
     --volume "$dir/bundle:/home/dev/.bundle"
     --volume "$dir/gem:/home/dev/.local/share/gem"
     --volume "$dir/codex:/home/dev/.codex"

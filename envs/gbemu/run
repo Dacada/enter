@@ -3,6 +3,7 @@ run_args+=(
     --volume "$dir/emacs.d:/home/dev/.emacs.d"
     --volume "$HOME/git/Phylactery:$HOME/git/Phylactery:ro"
     --volume "$HOME/.ssh:/home/dev/.ssh"
+    --volume "$HOME/.gitconfig:/home/dev/.gitconfig"
     --volume "$dir/icon:/run/container-icon:ro"
     --workdir /home/dev/gbemu
 )
