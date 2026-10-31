@@ -1,0 +1,10 @@
+run_args+=(
+    --volume "$dir/emacs.d:/home/dev/.emacs.d"
+    --volume "$HOME/git/Phylactery:$HOME/git/Phylactery:ro"
+    --volume "$HOME/.ssh:/home/dev/.ssh"
+    --volume "$dir/icon:/run/container-icon:ro"
+    --volume "$HOME/.gitconfig:/home/dev/.gitconfig"
+    --volume "$dir/codex:/home/dev/.codex"
+    --volume "$HOME/git/rpi-home-setup:/home/dev/rpi-home-setup"
+    --workdir /home/dev/rpi-home-setup
+)
